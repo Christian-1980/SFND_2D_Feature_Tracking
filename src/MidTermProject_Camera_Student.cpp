@@ -15,6 +15,7 @@
 
 #include "dataStructures.h"
 #include "matching2D.hpp"
+#include "ringBuffer.cpp"
 
 using namespace std;
 
@@ -57,12 +58,14 @@ int main(int argc, const char *argv[])
         cv::cvtColor(img, imgGray, cv::COLOR_BGR2GRAY);
 
         //// STUDENT ASSIGNMENT
-        //// TASK MP.1 -> replace the following code with ring buffer of size dataBufferSize
+        //// TASK MP.1 -> replace the following code with ring buffer called dataBuffer of size dataBufferSize
+        ImageRingBuffer dataBuffer(dataBufferSize);
 
         // push image into data frame buffer
         DataFrame frame;
         frame.cameraImg = imgGray;
-        dataBuffer.push_back(frame);
+        // dataBuffer.push_back(frame);
+        dataBuffer.push(frame)
 
         //// EOF STUDENT ASSIGNMENT
         cout << "#1 : LOAD IMAGE INTO BUFFER done" << endl;
