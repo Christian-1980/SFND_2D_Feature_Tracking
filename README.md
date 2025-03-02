@@ -20,11 +20,20 @@ See the classroom instruction and code comments for more details on each of thes
  * Mac: [install Xcode command line tools to get make](https://developer.apple.com/xcode/features/)
  * Windows: [Click here for installation instructions](http://gnuwin32.sourceforge.net/packages/make.htm)
 
-3. OpenCV >= 4.1
+3. OpenCV >= 4.1 & **Installation**
  * All OSes: refer to the [official instructions](https://docs.opencv.org/master/df/d65/tutorial_table_of_content_introduction.html)
- * This must be compiled from source using the `-D OPENCV_ENABLE_NONFREE=ON` cmake flag for testing the SIFT and SURF detectors. If using [homebrew](https://brew.sh/): `$> brew install --build-from-source opencv` will install required dependencies and compile opencv with the `opencv_contrib` module by default (no need to set `-DOPENCV_ENABLE_NONFREE=ON` manually). 
  * The OpenCV 4.1.0 source code can be found [here](https://github.com/opencv/opencv/tree/4.1.0)
-
+ * Git clone the following repos: **https://github.com/opencv/opencv.git** and **https://github.com/opencv/opencv_contrib.git**
+ * **This must be compiled from source** using the `-D OPENCV_ENABLE_NONFREE=ON` cmake flag for testing the SIFT and SURF detectors. If using [homebrew](https://brew.sh/): `$> brew install --build-from-source opencv` will install required dependencies and compile opencv with the `opencv_contrib` module by default (no need to set `-DOPENCV_ENABLE_NONFREE=ON` manually). 
+ * Also make sure top include the option make pc-file -D OPENCV_GENERATE_PKGCONFIG=ON
+ * --> **cmake -D CMAKE_BUILD_TYPE=RELEASE -D OPENCV_GENERATE_PKGCONFIG=ON -D OPENCV_ENABLE_NONFREE=ON -D OPENCV_EXTRA_MODULES_PATH=../../opencv_contrib/modules -D WITH_GTK=ON ..**
+ * next is to use **make -j$(nproc)** in order to make use of multi processoring
+ * then **sudo make install**
+ * include hte path to the OpenCV installation: **sudo find / -name opencv4.pc 2>/dev/null** to find the location and then **export PKG_CONFIG_PATH=/path/to/directory:$PKG_CONFIG_PATH** to set it weher /path/to/directory needs to be replaced by the location you found
+ * if using the debugger in VS Code please include this in the "args": "`pkg-config",
+                                                                        "--cflags",
+                                                                        "--libs",
+                                                                        "opencv4`"
 4. gcc/g++ >= 5.4
   * Linux: gcc / g++ is installed by default on most Linux distros
   * Mac: same deal as make - [install Xcode command line tools](https://developer.apple.com/xcode/features/)
