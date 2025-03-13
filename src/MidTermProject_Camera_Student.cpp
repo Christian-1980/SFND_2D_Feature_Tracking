@@ -112,7 +112,14 @@ int main(int argc, const char *argv[])
         cv::Rect vehicleRect(535, 180, 180, 150);
         if (bFocusOnVehicle)
         {
-            // ...
+            // temp vector to write out the keypoints of interest
+            vector<cv::KeyPoint> framedKeypoints;
+
+            for (auto kp : keypoints) {
+                if (vehicleRect.contains(kp.pt)) framedKeypoints.push_back(kp);
+            }
+            // reframed keypoints
+            keypoints = framedKeypoints;
         }
 
         //// EOF STUDENT ASSIGNMENT
