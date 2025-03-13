@@ -103,7 +103,7 @@ void detKeypointsShiTomasi(vector<cv::KeyPoint> &keypoints, cv::Mat &img, bool b
 }
 
 // Detect keypoints in image using the traditional Shi-Thomasi detector
-void detkeypointsHarris(vector<cv::KeyPoint> &keypoints, cv::Mat &img, bool bVis)
+void detKeypointsHarris(vector<cv::KeyPoint> &keypoints, cv::Mat &img, bool bVis)
 {
     // Detector parameters
     int blockSize = 2;     // for every pixel, a blockSize × blockSize neighborhood is considered
@@ -130,27 +130,29 @@ void detkeypointsHarris(vector<cv::KeyPoint> &keypoints, cv::Mat &img, bool bVis
     }
 }
 
-void detKeypointsModern(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img, std::string detectorType, bool bVis=false)
+void detKeypointsModern(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img, std::string detectorType, bool bVis)
 {
-    if (detectorType == "FAST") {
+    if (detectorType.compare("FAST") == 0) {
         
         // Standard parameters for FAST detector
         int threshold = 10; // Lower values detect more corners
         bool nonmaxSuppression = true;
-        int type = cv::FastFeatureDetector::TYPE_9_16; // Other options: TYPE_7_12, TYPE_5_8
+        //int type = cv::FastFeatureDetector::TYPE_9_16; // Other options: TYPE_7_12, TYPE_5_8
         
-        detector = cv::FastFeatureDetector::create(threshold, nonmaxSuppression, type);
+        auto detector = cv::FastFeatureDetector::create(threshold, nonmaxSuppression, cv::FastFeatureDetector::TYPE_9_16);
+        detector->detect(img, keypoints);
 
-    } else if (detectorType == "BRISK") {
+    } else if (detectorType.compare("BRISK") == 0)  {
 
         // Standard parameters for BRISK detector
         int threshold = 30; // Detection threshold (lower = more keypoints)
         int octaves = 3;     // Detection octaves (scale space)
         float patternScale = 1.0f; // Apply this scale to the pattern used for sampling the neighbourhood of a keypoint.
 
-        detector = cv::BRISK::create(threshold, octaves, patternScale);
+        auto detector = cv::BRISK::create(threshold, octaves, patternScale);
+        detector->detect(img, keypoints);
 
-    } else if (detectorType == "ORB") {
+    } else if (detectorType.compare("ORB") == 0)  {
 
         // Standard parameters for ORB detector
         int nfeatures = 500; // Number of desired features
@@ -163,9 +165,10 @@ void detKeypointsModern(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img, std:
         int patchSize = 31; // Size of the patch used by the oriented BRIEF descriptor
         int fastThreshold = 20; // FAST threshold
 
-        detector = cv::ORB::create(nfeatures, scaleFactor, nlevels, edgeThreshold, firstLevel, wta_k, scoreType, patchSize, fastThreshold);
-    
-    } else if (detectorType == "AKAZE") {
+        auto detector = cv::ORB::create(nfeatures, scaleFactor, nlevels, edgeThreshold, firstLevel, wta_k, scoreType, patchSize, fastThreshold);
+        detector->detect(img, keypoints);
+
+    } else if (detectorType.compare("AKAZE") == 0) {
         
         // Standard parameters for AKAZE detector
         cv::AKAZE::DescriptorType descriptorType = cv::AKAZE::DESCRIPTOR_MLDB; // Type of the extracted descriptor
@@ -176,9 +179,10 @@ void detKeypointsModern(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img, std:
         int nOctaveLayers = 4; // Default number of sublevels per scale level
         cv::KAZE::DiffusivityType diffusivity = cv::KAZE::DIFF_PM_G2; // Diffusivity used by the nonlinear diffusion filter
 
-        detector = cv::AKAZE::create(descriptorType, descriptorSize, descriptorChannels, threshold, nOctaves, nOctaveLayers, diffusivity);
-    
-    } else if (detectorType == "SIFT") {
+        auto detector = cv::AKAZE::create(descriptorType, descriptorSize, descriptorChannels, threshold, nOctaves, nOctaveLayers, diffusivity);
+        detector->detect(img, keypoints);
+
+    } else if (detectorType.compare("SIFT") == 0){
         
         // Standard parameters for SIFT detector
         int nfeatures = 0; // The number of best features to retain. The features are sorted by their response (score).
@@ -187,14 +191,13 @@ void detKeypointsModern(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img, std:
         double edgeThreshold = 10; // The edge threshold used to filter out bad features from edges.
         double sigma = 1.6; // The sigma of the Gaussian applied to the input image at the octave #0.
 
-        detector = cv::SIFT::create(nfeatures, nOctaveLayers, contrastThreshold, edgeThreshold, sigma);
+        auto detector = cv::SIFT::create(nfeatures, nOctaveLayers, contrastThreshold, edgeThreshold, sigma);
+        detector->detect(img, keypoints);
     
     } else {
-        std::cerr << "Error: Invalid detector type: " << detectorType << std::endl;
-        return;
+        // Specified detectorType is unsupported
+        throw invalid_argument(detectorType + " is not a valid detectorType");
     }
-
-    detector->detect(img, keypoints);
 
     if (bVis) {
         cv::Mat img_keypoints;
