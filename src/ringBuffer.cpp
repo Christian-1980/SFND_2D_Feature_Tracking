@@ -3,14 +3,14 @@
 #include <opencv2/opencv.hpp>
 
 
-// Dummy DataFrame class for testing in main()
-class DataFrame {
-public:
-    DataFrame(const std::string& name) : name_(name) {}
-    std::string getName() const { return name_; }
-private:
-    std::string name_;
-};
+// // Dummy DataFrame class for testing in main()
+// class DataFrame {
+// public:
+//     DataFrame(const std::string& name) : name_(name) {}
+//     std::string getName() const { return name_; }
+// private:
+//     std::string name_;
+// };
 
 
 class ImageRingBuffer {
