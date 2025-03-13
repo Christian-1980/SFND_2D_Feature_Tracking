@@ -66,7 +66,7 @@ void descKeypoints(vector<cv::KeyPoint> &keypoints, cv::Mat &img, cv::Mat &descr
     }
     else if (descriptorType.compare("SIFT") == 0)
     {
-        extractor = cv::xfeatures2d::SIFT::create();
+        extractor = cv::SIFT::create();
     }
     else
     {
