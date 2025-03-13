@@ -59,13 +59,17 @@ int main(int argc, const char *argv[])
 
         //// STUDENT ASSIGNMENT
         //// TASK MP.1 -> replace the following code with ring buffer called dataBuffer of size dataBufferSize
-        ImageRingBuffer dataBuffer(dataBufferSize);
+        //ImageRingBuffer dataBuffer(dataBufferSize);
 
         // push image into data frame buffer
         DataFrame frame;
         frame.cameraImg = imgGray;
-        // dataBuffer.push_back(frame);
-        dataBuffer.push(frame)
+        dataBuffer.push_back(frame);
+
+        // limit data frame buffer size by removing oldest frame
+        if (dataBuffer.size() > dataBufferSize) {
+            dataBuffer.erase(dataBuffer.begin());
+          }
 
         //// EOF STUDENT ASSIGNMENT
         cout << "#1 : LOAD IMAGE INTO BUFFER done" << endl;
@@ -74,7 +78,8 @@ int main(int argc, const char *argv[])
 
         // extract 2D keypoints from current image
         vector<cv::KeyPoint> keypoints; // create empty feature list for current image
-        string detectorType = "SHITOMASI";
+        
+        string detectorType = "FAST";
 
         //// STUDENT ASSIGNMENT
         //// TASK MP.2 -> add the following keypoint detectors in file matching2D.cpp and enable string-based selection based on detectorType
@@ -87,9 +92,16 @@ int main(int argc, const char *argv[])
         else if (detectorType.compare("HARRIS") == 0) {
             detKeypointsHarris(keypoints, imgGray, false);
         }
-        else {
+        else 
+        {
             detKeypointsModern(keypoints, imgGray, detectorType, false);
         }
+
+        // // Specified detectorType is unsupported
+        // else
+        // {
+        //     throw invalid_argument(detectorType + " is not a valid detectorType");
+        // }
         //// EOF STUDENT ASSIGNMENT
 
         //// STUDENT ASSIGNMENT
