@@ -39,7 +39,7 @@ int main(int argc, const char *argv[])
     // misc
     int dataBufferSize = 2;       // no. of images which are held in memory (ring buffer) at the same time
     vector<DataFrame> dataBuffer; // list of data frames which are held in memory at the same time
-    bool bVis = false;            // visualize results
+    bool bVis = true;            // visualize results
 
     /* MAIN LOOP OVER ALL IMAGES */
 
@@ -79,7 +79,7 @@ int main(int argc, const char *argv[])
         // extract 2D keypoints from current image
         vector<cv::KeyPoint> keypoints; // create empty feature list for current image
         
-        string detectorType = "FAST";
+        string detectorType = "BRISK";
 
         //// STUDENT ASSIGNMENT
         //// TASK MP.2 -> add the following keypoint detectors in file matching2D.cpp and enable string-based selection based on detectorType
@@ -97,11 +97,6 @@ int main(int argc, const char *argv[])
             detKeypointsModern(keypoints, imgGray, detectorType, false);
         }
 
-        // // Specified detectorType is unsupported
-        // else
-        // {
-        //     throw invalid_argument(detectorType + " is not a valid detectorType");
-        // }
         //// EOF STUDENT ASSIGNMENT
 
         //// STUDENT ASSIGNMENT
@@ -138,6 +133,11 @@ int main(int argc, const char *argv[])
             cout << " NOTE: Keypoints have been limited!" << endl;
         }
 
+        // // Specified detectorType is unsupported
+        // else
+        // {
+        //     throw invalid_argument(detectorType + " is not a valid detectorType");
+        // }
         // push keypoints and descriptor for current frame to end of data buffer
         (dataBuffer.end() - 1)->keypoints = keypoints;
         cout << "#2 : DETECT KEYPOINTS done" << endl;
@@ -184,9 +184,10 @@ int main(int argc, const char *argv[])
             cout << "#4 : MATCH KEYPOINT DESCRIPTORS done" << endl;
 
             // visualize matches between current and previous image
-            bVis = true;
+            bVis = false;
             if (bVis)
             {
+                // here there need to be setting the "unset GTK_PATH" before it works under my local setup!
                 cv::Mat matchImg = ((dataBuffer.end() - 1)->cameraImg).clone();
                 cv::drawMatches((dataBuffer.end() - 2)->cameraImg, (dataBuffer.end() - 2)->keypoints,
                                 (dataBuffer.end() - 1)->cameraImg, (dataBuffer.end() - 1)->keypoints,
@@ -195,7 +196,7 @@ int main(int argc, const char *argv[])
                                 vector<char>(), cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
 
                 string windowName = "Matching keypoints between two camera images";
-                cv::namedWindow(windowName, 7);
+                cv::namedWindow(windowName, cv::WINDOW_AUTOSIZE);
                 cv::imshow(windowName, matchImg);
                 cout << "Press key to continue to next image" << endl;
                 cv::waitKey(0); // wait for key to be pressed
