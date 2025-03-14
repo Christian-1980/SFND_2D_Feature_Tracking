@@ -22,8 +22,23 @@ using namespace std;
 /* MAIN PROGRAM */
 int main(int argc, const char *argv[])
 {
+    // #####################################
+    // ### VARIABLES AND DATA STRUCTURES ###
+    // #####################################
 
-    /* INIT VARIABLES AND DATA STRUCTURES */
+    // Detector Choice:
+    string detectorType = "BRISK";      // -> HARRIS, FAST, BRISK, ORB, AKAZE, SIFT
+    
+    // Descriptor Choice:
+    string descriptorType = "BRIEF";    // -> BRIEF, ORB, FREAK, AKAZE, SIFT
+
+    // Matching Choice:
+    string matcherType = "MAT_BF";        // -> MAT_BF, MAT_FLANN
+    string matchDescriptorType = "DES_BINARY"; // -> DES_BINARY, DES_HOG
+    string matchSelectorType = "SEL_NN";       // -> SEL_NN, SEL_KNN
+    
+    // FLAGS
+    bool flag_all_combinations = false; // to process all above Detector/Descriptor/Matching combinations
 
     // data location
     string dataPath = "../";
@@ -36,10 +51,20 @@ int main(int argc, const char *argv[])
     int imgEndIndex = 9;   // last file index to load
     int imgFillWidth = 4;  // no. of digits which make up the file index (e.g. img-0001.png)
 
-    // misc
+    // Visualize matching results
+    bool bVis = false;            // visualize results
+
+    // data buffer
     int dataBufferSize = 2;       // no. of images which are held in memory (ring buffer) at the same time
     vector<DataFrame> dataBuffer; // list of data frames which are held in memory at the same time
-    bool bVis = true;            // visualize results
+    
+    // reduce search to proceeding vehicle box
+    bool bFocusOnVehicle = true; // focus only on the proceeding vehicle
+    cv::Rect vehicleRect(535, 180, 180, 150); // fix pixle locations
+
+    // ############
+    // ### CODE ###
+    // ############
 
     /* MAIN LOOP OVER ALL IMAGES */
 
@@ -79,12 +104,8 @@ int main(int argc, const char *argv[])
         // extract 2D keypoints from current image
         vector<cv::KeyPoint> keypoints; // create empty feature list for current image
         
-        string detectorType = "BRISK";
-
         //// STUDENT ASSIGNMENT
         //// TASK MP.2 -> add the following keypoint detectors in file matching2D.cpp and enable string-based selection based on detectorType
-        //// -> HARRIS, FAST, BRISK, ORB, AKAZE, SIFT
-
         if (detectorType.compare("SHITOMASI") == 0)
         {
             detKeypointsShiTomasi(keypoints, imgGray, false);
@@ -96,15 +117,12 @@ int main(int argc, const char *argv[])
         {
             detKeypointsModern(keypoints, imgGray, detectorType, false);
         }
-
         //// EOF STUDENT ASSIGNMENT
 
         //// STUDENT ASSIGNMENT
         //// TASK MP.3 -> only keep keypoints on the preceding vehicle
-
         // only keep keypoints on the preceding vehicle
-        bool bFocusOnVehicle = true;
-        cv::Rect vehicleRect(535, 180, 180, 150);
+        
         if (bFocusOnVehicle)
         {
             // temp vector to write out the keypoints of interest
@@ -116,7 +134,6 @@ int main(int argc, const char *argv[])
             // reframed keypoints
             keypoints = framedKeypoints;
         }
-
         //// EOF STUDENT ASSIGNMENT
 
         // optional : limit number of keypoints (helpful for debugging and learning)
@@ -133,11 +150,6 @@ int main(int argc, const char *argv[])
             cout << " NOTE: Keypoints have been limited!" << endl;
         }
 
-        // // Specified detectorType is unsupported
-        // else
-        // {
-        //     throw invalid_argument(detectorType + " is not a valid detectorType");
-        // }
         // push keypoints and descriptor for current frame to end of data buffer
         (dataBuffer.end() - 1)->keypoints = keypoints;
         cout << "#2 : DETECT KEYPOINTS done" << endl;
@@ -147,9 +159,7 @@ int main(int argc, const char *argv[])
         //// STUDENT ASSIGNMENT
         //// TASK MP.4 -> add the following descriptors in file matching2D.cpp and enable string-based selection based on descriptorType
         //// -> BRIEF, ORB, FREAK, AKAZE, SIFT
-
         cv::Mat descriptors;
-        string descriptorType = "BRISK"; // BRIEF, ORB, FREAK, AKAZE, SIFT
         descKeypoints((dataBuffer.end() - 1)->keypoints, (dataBuffer.end() - 1)->cameraImg, descriptors, descriptorType);
         //// EOF STUDENT ASSIGNMENT
 
@@ -160,13 +170,8 @@ int main(int argc, const char *argv[])
 
         if (dataBuffer.size() > 1) // wait until at least two images have been processed
         {
-
             /* MATCH KEYPOINT DESCRIPTORS */
-
             vector<cv::DMatch> matches;
-            string matcherType = "MAT_BF";        // MAT_BF, MAT_FLANN
-            string descriptorType = "DES_BINARY"; // DES_BINARY, DES_HOG
-            string selectorType = "SEL_NN";       // SEL_NN, SEL_KNN
 
             //// STUDENT ASSIGNMENT
             //// TASK MP.5 -> add FLANN matching in file matching2D.cpp
@@ -174,7 +179,7 @@ int main(int argc, const char *argv[])
 
             matchDescriptors((dataBuffer.end() - 2)->keypoints, (dataBuffer.end() - 1)->keypoints,
                              (dataBuffer.end() - 2)->descriptors, (dataBuffer.end() - 1)->descriptors,
-                             matches, descriptorType, matcherType, selectorType);
+                             matches, matchDescriptorType, matcherType, matchSelectorType);
 
             //// EOF STUDENT ASSIGNMENT
 
@@ -184,12 +189,11 @@ int main(int argc, const char *argv[])
             cout << "#4 : MATCH KEYPOINT DESCRIPTORS done" << endl;
 
             // visualize matches between current and previous image
-            bVis = false;
             if (bVis)
             {
                 // here there need to be setting the "unset GTK_PATH" before it works under my local setup!
                 cv::Mat matchImg = ((dataBuffer.end() - 1)->cameraImg).clone();
-                cv::drawMatches((dataBuffer.end() - 2)->cameraImg, (dataBuffer.end() - 2)->keypoints,
+                cv::drawMatches((dataBuffer.end() - 2)->cameraImg, (dataBuffer.end() - 2)->keypoints,            
                                 (dataBuffer.end() - 1)->cameraImg, (dataBuffer.end() - 1)->keypoints,
                                 matches, matchImg,
                                 cv::Scalar::all(-1), cv::Scalar::all(-1),
