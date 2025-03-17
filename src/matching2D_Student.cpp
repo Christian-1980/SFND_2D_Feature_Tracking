@@ -8,22 +8,43 @@ void matchDescriptors(std::vector<cv::KeyPoint> &kPtsSource, std::vector<cv::Key
                       std::vector<cv::DMatch> &matches, std::string descriptorType, std::string matcherType, std::string selectorType)
 {
     // configure matcher
-    bool crossCheck = false;
     cv::Ptr<cv::DescriptorMatcher> matcher;
 
     if (matcherType.compare("MAT_BF") == 0)
     {
-        int normType = cv::NORM_HAMMING;
-        matcher = cv::BFMatcher::create(normType, crossCheck);
+        int normType;
+
+        // SIFT needs gradients
+        if (descriptorType.compare("DES_HOG") == 0)
+        {
+            normType = cv::NORM_L2;
+        }
+
+        // with all other binary descriptors
+        else
+        {
+            normType = cv::NORM_HAMMING;
+        }
+
+        matcher = cv::BFMatcher::create(normType, true);
     }
+
     else if (matcherType.compare("MAT_FLANN") == 0)
     {
-        if (descSource.type() != CV_32F || descRef.type() != CV_32F) 
+        // SIFT needs gradients
+        if (descriptorType.compare("DES_HOG") == 0)
         {
-            descSource.convertTo(descSource, CV_32F);
-            descRef.convertTo(descRef,CV_32F);
+            matcher = cv::FlannBasedMatcher::create();
         }
-        matcher = cv::DescriptorMatcher::create(cv::DescriptorMatcher::FLANNBASED);
+        // with all other binary descriptorTypes
+        else
+        {
+            const cv::Ptr<cv::flann::IndexParams>& indexParams = cv::makePtr<cv::flann::LshIndexParams>(12, 20, 2);
+            matcher = cv::makePtr<cv::FlannBasedMatcher>(indexParams);
+            // std::cout << "descSource size: " << descSource.size() << " x " << descSource.cols << std::endl;
+            // std::cout << "descRef size: " << descRef.size() << " x " << descRef.cols << std::endl;
+
+        }
     }
 
     // perform matching task
@@ -32,6 +53,7 @@ void matchDescriptors(std::vector<cv::KeyPoint> &kPtsSource, std::vector<cv::Key
 
         matcher->match(descSource, descRef, matches); // Finds the best match for each descriptor in desc1
     }
+    
     else if (selectorType.compare("SEL_KNN") == 0)
     { 
         // k nearest neighbors (k=2)
@@ -96,7 +118,7 @@ void descKeypoints(vector<cv::KeyPoint> &keypoints, cv::Mat &img, cv::Mat &descr
     double t = (double)cv::getTickCount();
     extractor->compute(img, keypoints, descriptors);
     t = ((double)cv::getTickCount() - t) / cv::getTickFrequency();
-    cout << descriptorType << " descriptor extraction in " << 1000 * t / 1.0 << " ms" << endl;
+    // cout << descriptorType << " descriptor extraction in " << 1000 * t / 1.0 << " ms" << endl;
 }
 
 // Detect keypoints in image using the traditional Shi-Thomasi detector
@@ -126,7 +148,7 @@ void detKeypointsShiTomasi(vector<cv::KeyPoint> &keypoints, cv::Mat &img, bool b
         keypoints.push_back(newKeyPoint);
     }
     t = ((double)cv::getTickCount() - t) / cv::getTickFrequency();
-    cout << "Shi-Tomasi detection with n=" << keypoints.size() << " keypoints in " << 1000 * t / 1.0 << " ms" << endl;
+    // cout << "Shi-Tomasi detection with n=" << keypoints.size() << " keypoints in " << 1000 * t / 1.0 << " ms" << endl;
 
     // visualize results
     if (bVis)
