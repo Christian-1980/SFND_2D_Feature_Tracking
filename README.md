@@ -158,6 +158,11 @@ Finally, in a short text, please justify your recommendation based on your obser
 
 -> Considering we are want to have TTC, 2 main criteria: (a) TIME and (b) HIGH MATCHING: there for I would choose the following combination:
 
+ - Detector Type:   FAST
+ - Descriptor Type: BRIEF or ORB
+
+based in the following analysis:
+
 ![Mean Total Time for and Image by Detector Type](./results/Capture_Avg_TotalTime_Detectors.png)
 
 ![Matching per Imagesequence by Detector Type](./results/Capture_Avg_Matches_Detectors.PNG)
