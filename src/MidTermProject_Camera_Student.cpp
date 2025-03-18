@@ -28,13 +28,13 @@ int main(int argc, const char *argv[])
     // #####################################
 
     // Detector Choice:
-    string detectorType = "SHITOMASI";      // -> HARRIS, FAST, BRISK, ORB, AKAZE, SIFT
+    string detectorType = "HARRIS";      // -> HARRIS, FAST, BRISK, ORB, AKAZE, SIFT
     
     // Descriptor Choice:
     string descriptorType = "BRIEF";    // -> BRIEF, ORB, FREAK, AKAZE, SIFT
 
     // FLAGS
-    bool flag_all_combinations = true; // to process all above Detector/Descriptor combinations
+    bool flag_all_combinations = false; // to process all above Detector/Descriptor combinations
 
     // Matching Choice:
     string matcherType = "MAT_FLANN";        // -> MAT_BF, MAT_FLANN
@@ -200,11 +200,14 @@ int main(int argc, const char *argv[])
                             /* EXTRACT KEYPOINT DESCRIPTORS */
                             
                                 //// STUDENT ASSIGNMENT
-                                // cout << "Start processing combination: " << dectType << "/" << descType << "." << endl;
-                            
+                                
+                                double descTime = (double)cv::getTickCount();
+                                
                                 //// TASK MP.4 -> add the following descriptors in file matching2D.cpp and enable string-based selection based on descriptorType
                                 cv::Mat descriptors;
                                 descKeypoints((dataBuffer.end() - 1)->keypoints, (dataBuffer.end() - 1)->cameraImg, descriptors, descType);
+                                
+                                descTime = ((double)cv::getTickCount() - descTime) / cv::getTickFrequency();
                                 //// EOF STUDENT ASSIGNMENT
 
                                 // push descriptors for current frame to end of data buffer
@@ -217,7 +220,7 @@ int main(int argc, const char *argv[])
                                     /* MATCH KEYPOINT DESCRIPTORS */
                                     // cout << "Starting matching process with " << matchDescriptorType << "and" << matchSelectorType << " ." << endl;
                                     
-                                    double descTime = (double)cv::getTickCount();
+                                    double matchTime = (double)cv::getTickCount();
 
                                     // Catch SIFT needs gradient based and all others are going with binary
                                     string matchDescriptorType;
@@ -238,7 +241,7 @@ int main(int argc, const char *argv[])
                                                     (dataBuffer.end() - 2)->descriptors, (dataBuffer.end() - 1)->descriptors,
                                                     matches, matchDescriptorType, matcherType, matchSelectorType);
                                     
-                                    descTime = ((double)cv::getTickCount() - descTime) / cv::getTickFrequency();
+                                    matchTime = ((double)cv::getTickCount() - matchTime) / cv::getTickFrequency();
 
                                     cout << "IMAGE_" << imgIndex << ",";
                                     cout << dectType << ",";
@@ -246,7 +249,8 @@ int main(int argc, const char *argv[])
                                     cout << matches.size() << ",";
                                     cout << 1000 * detectorTime / 1.0 << ",";
                                     cout << 1000 * descTime / 1.0 << ",";
-                                    cout << (1000 * detectorTime / 1.0) + (1000 * descTime / 1.0) << endl;
+                                    cout << 1000 * matchTime / 1.0 << ",";
+                                    cout << (1000 * detectorTime / 1.0) + (1000 * descTime / 1.0) + (1000 * matchTime / 1.0)<< endl;
 
                                     //// EOF STUDENT ASSIGNMENT
 
