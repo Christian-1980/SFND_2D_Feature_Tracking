@@ -50,3 +50,115 @@ Then, add *C:\vcpkg\installed\x64-windows\bin* and *C:\vcpkg\installed\x64-windo
 2. Make a build directory in the top level directory: `mkdir build && cd build`
 3. Compile: `cmake .. && make`
 4. Run it: `./2D_feature_tracking`.
+
+## PROJECT TASKS
+
+### MP.1
+In order to have a managable size, a data buffer has to be implemented. Please replace the code in section 'TASK MP.1' with an implementation of this principle.
+
+```
+// data buffer
+int dataBufferSize = 2;       // no. of images which are held in memory (ring buffer) at the same time
+vector<DataFrame> dataBuffer; // list of data frames which are held in memory at the same time
+
+// push image into data frame buffer
+DataFrame frame;
+frame.cameraImg = imgGray;
+dataBuffer.push_back(frame);
+
+// limit data frame buffer size by removing oldest frame
+if (dataBuffer.size() > dataBufferSize) {
+    dataBuffer.erase(dataBuffer.begin());
+}
+```
+
+### MP.2
+There is an existing implementation of the Shi-Tomasi detector. Please implement a selection of alternative detectors, which are HARRIS, FAST, BRISK, ORB, AKAZE, and SIFT.
+
+-> It is possible to select one detector or run at the end all requested detector and descritpot combintions (see flag_all_combinations). In the code the selected detector is a vector of either one or more entries depending on the flag:
+
+```
+// Detector Choice:
+string detectorType = "HARRIS";      // -> HARRIS, FAST, BRISK, ORB, AKA
+    
+// Descriptor Choice:
+string descriptorType = "BRIEF";    // -> BRIEF, ORB, FREAK, AKAZE, SIFT
+
+// FLAGS
+bool flag_all_combinations = true; // to process all above Detector/Descriptor combinations
+
+```
+
+### MP.3
+As we are focussing on a collision detection system in this course, keypoints on the preceding vehicle are of special interest to us. Therefore, in order to enable a more targeted evaluation, we want to discard feature points that are not located on the preceding vehicle.
+
+-> the filtering on keypoint only from the proceeding vehicle is done like this:
+```
+// reduce search to proceeding vehicle box
+bool bFocusOnVehicle = true; // focus only on the proceeding vehicle
+cv::Rect vehicleRect(535, 180, 180, 150); // fix pixle locations
+
+if (bFocusOnVehicle)
+{
+    // temp vector to write out the keypoints of interest
+    vector<cv::KeyPoint> framedKeypoints;
+    for (auto kp : keypoints) {
+        if (vehicleRect.contains(kp.pt)) framedKeypoints.push_back(kp);
+    }
+    // reframed keypoints
+    keypoints = framedKeypoints;
+}
+
+```
+
+### MP.4
+Your fourth task is to implement BRISK, BRIEF, ORB, FREAK, AKAZE and SIFT methods and make them selectable using the string 'descriptorType'.
+
+-> For the seltection pls see. MP.2 and the code snippet. The code od the descriptors is added accordingly in matching2D_Student.cpp
+
+### MP.5
+You must now add FLANN as an alternative to brute-force as well as the K-Nearest-Neighbor approach.
+
+-> The code od the descriptors is added accordingly in matching2D_Student.cpp. It has been taken care for the special case that SIFT only works with a different norm in case of Brut Force as well as FLANN. All descritors are using binary implementations.
+
+-> Also the KNN selector type is implemented in which k=2.
+
+### MP.6
+Filtering method to remove bad keypoint matches:
+
+```
+// Filter matches using descriptor distance ratio test
+double minDescDistRatio = 0.8;
+for (auto it : knn_matches) {
+    // Check if the  2 matches are near to each other % if so psuh to resulting vector
+    if ( 2 == it.size() && (it[0].distance < minDescDistRatio * it[1].distance) ) {
+        matches.push_back(it[0]);
+    }
+}
+```
+
+### MP.7
+Count the number of keypoints on the preceding vehicle for all 10 images.
+
+-> You find a file inside the results folder in which you have the overview on all results.
+![Keypoint Detections per Image by Detector Type](./results/Keyppints_per_Image_by_Detector.png)
+
+### MP.8
+Count the number of matched keypoints for all 10 images using all possible combinations of detectors and descriptors. In the matching step, use the BF approach with the descriptor distance ratio set to 0.8.
+
+![Matchingpoints per Image by Detector Type](./results/MatchingPoints_per_Image_by_Detector.png)
+
+### MP.9
+Your ninth task is to log the time it takes for keypoint detection and descriptor extraction. The results must be entered into a spreadsheet and based on this information you will then suggest the TOP3 detector / descriptor combinations as the best choice for our purpose of detecting keypoints on vehicles. 
+
+-> Pls. see the filtering of the data:
+
+
+Finally, in a short text, please justify your recommendation based on your observations and on the data you collected.
+
+-> Considering we are want to have TTC, 2 main criteria: (a) TIME and (b) HIGH MATCHING: there for I would choose the following combination:
+
+![Mean Total Time for and Image by Detector Type](./results/Capture_Avg_TotalTime_Detectors.png)
+
+![Matching per Imagesequence by Detector Type](./results/Capture_Avg_Matches_Detectors.PNG)
+
