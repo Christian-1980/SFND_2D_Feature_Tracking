@@ -34,7 +34,7 @@ int main(int argc, const char *argv[])
     string descriptorType = "BRIEF";    // -> BRIEF, ORB, FREAK, AKAZE, SIFT
 
     // FLAGS
-    bool flag_all_combinations = false; // to process all above Detector/Descriptor combinations
+    bool flag_all_combinations = true; // to process all above Detector/Descriptor combinations
 
     // Matching Choice:
     string matcherType = "MAT_FLANN";        // -> MAT_BF, MAT_FLANN
@@ -246,6 +246,7 @@ int main(int argc, const char *argv[])
                                     cout << "IMAGE_" << imgIndex << ",";
                                     cout << dectType << ",";
                                     cout << descType << ",";
+                                    cout << keypoints.size() << ",";
                                     cout << matches.size() << ",";
                                     cout << 1000 * detectorTime / 1.0 << ",";
                                     cout << 1000 * descTime / 1.0 << ",";
