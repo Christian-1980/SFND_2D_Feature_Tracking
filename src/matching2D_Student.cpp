@@ -170,6 +170,9 @@ void detKeypointsHarris(vector<cv::KeyPoint> &keypoints, cv::Mat &img, bool bVis
     int apertureSize = 3;  // aperture parameter for Sobel operator (must be odd)
     int minResponse = 100; // minimum value for a corner in the 8bit scaled response matrix
     double k = 0.04;       // Harris parameter (see equation for details)
+    
+    // Non-maximum suppression (NMS) settings
+    double maxOverlap = 0.0;  // Maximum overlap between two features in %
 
     // Detect Harris corners and normalize output
     cv::Mat dst, dst_norm, dst_norm_scaled;
@@ -177,6 +180,43 @@ void detKeypointsHarris(vector<cv::KeyPoint> &keypoints, cv::Mat &img, bool bVis
     cv::cornerHarris(img, dst, blockSize, apertureSize, k, cv::BORDER_DEFAULT);
     cv::normalize(dst, dst_norm, 0, 255, cv::NORM_MINMAX, CV_32FC1, cv::Mat());
     cv::convertScaleAbs(dst_norm, dst_norm_scaled);
+
+    // Apply non-maximum suppression (NMS)
+    for (size_t j = 0; j < dst_norm.rows; j++) {
+        for (size_t i = 0; i < dst_norm.cols; i++) {
+            int response = (int)dst_norm.at<float>(j, i);
+
+            // Apply the minimum threshold for Harris cornerness response
+            if (response < minResponse) continue;
+
+            // Otherwise create a tentative new keypoint
+            cv::KeyPoint newKeyPoint;
+            newKeyPoint.pt = cv::Point2f(i, j);
+            newKeyPoint.size = 2 * apertureSize;
+            newKeyPoint.response = response;
+
+            // Perform non-maximum suppression (NMS) in local neighbourhood around the new keypoint
+            bool bOverlap = false;
+            // Loop over all existing keypoints
+            for (auto it = keypoints.begin(); it != keypoints.end(); ++it) {
+                double kptOverlap = cv::KeyPoint::overlap(newKeyPoint, *it);
+                // Test if overlap exceeds the maximum percentage allowable
+                if (kptOverlap > maxOverlap) {
+                    bOverlap = true;
+                    // If overlapping, test if new response is the local maximum
+                    if (newKeyPoint.response > (*it).response) {
+                        *it = newKeyPoint;  // Replace the old keypoint
+                        break;  // Exit for loop
+                    }
+                }
+            }
+
+            // If above response threshold and not overlapping any other keypoint
+            if (!bOverlap) {
+                keypoints.push_back(newKeyPoint);  // Add to keypoints list
+            }
+        }
+    }
 
     if (bVis)
     {
@@ -188,6 +228,7 @@ void detKeypointsHarris(vector<cv::KeyPoint> &keypoints, cv::Mat &img, bool bVis
         imshow(windowName, visImage);
         cv::waitKey(0);
     }
+    
 }
 
 void detKeypointsModern(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img, std::string detectorType, bool bVis)
